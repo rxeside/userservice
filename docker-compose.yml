@@ -8,7 +8,7 @@ services:
     command:
       - service
     ports:
-      - "8081:8081"
+      - "8082:8081"
     environment:
       USER_DATABASE_HOST: userservice-db
       USER_DATABASE_NAME: userservice_db
@@ -18,7 +18,7 @@ services:
       userservice-db:
         condition: service_healthy
     networks:
-      - userservice-net
+      - app-tier
 
   userservice-message-handler:
     image: userservice
@@ -43,7 +43,7 @@ services:
       userservice-rmq:
         condition: service_healthy
     networks:
-      - userservice-net
+      - app-tier
 
   userservice-db:
     image: "mysql:8.3"
@@ -57,20 +57,20 @@ services:
       MYSQL_USER: userservice
       MYSQL_PASSWORD: 12345Q
     ports:
-      - "3306:3306"
+      - "3307:3306"
     healthcheck:
       test: mysql -h127.0.0.1 -uroot -e 'SELECT 1'
       interval: 10s
       timeout: 30s
     networks:
-      - userservice-net
+      - app-tier
 
   userservice-rmq:
     image: "rabbitmq:4.2.0-management-alpine"
     container_name: userservice-rmq
     hostname: userservice-rmq
     ports:
-      - "15672:15672"
+      - "15673:15672"
     volumes:
       - "userservice-rmq-data:/var/lib/rabbitmq/mnesia"
     healthcheck:
@@ -79,15 +79,12 @@ services:
       timeout: 3s
       retries: 30
     networks:
-      - userservice-net
+      - app-tier
 
 volumes:
   userservice-db-data:
   userservice-rmq-data:
 
 networks:
-  userservice-net:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.30.1.0/24
+  app-tier:
+    external: true
